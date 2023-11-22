@@ -86,6 +86,7 @@ This project is conducted using R programming language.
 
 <ins> Confusion Matrix </ins>
 ||0|1|
+|:---|:----:|---:|
 |0|483|62|
 |1|22|28|
 
