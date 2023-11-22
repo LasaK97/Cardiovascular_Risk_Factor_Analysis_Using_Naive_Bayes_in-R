@@ -1,0 +1,766 @@
+---
+title: "Cardiovascular Risk Factor"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+```
+
+# Cardiovascular Risk Factor Prediction
+
+```{r}
+#importing data
+library(readr)
+cardio.data <- read.csv('../data/data_cardiovascular_risk.csv')
+head(cardio.data)
+```
+
+```{r}
+#column names
+colnames(cardio.data)
+```
+
+```{r}
+#dimensions of the data
+dim(cardio.data)
+```
+
+-   The data set contains 3390 rows and 17 columns.
+
+```{r}
+#structure of the dataset
+str(cardio.data)
+```
+
+## 1. Data Cleaning
+
+#### 1.1 Handling Missing Values
+
+```{r}
+#missing values
+library(mice)
+```
+
+```{r}
+miss.count <- function(x){
+  sort(colSums(is.na(x)), decreasing = TRUE )
+}
+miss.count(cardio.data)
+```
+
+```{r}
+md.pattern(cardio.data, rotate.names = TRUE, plot = TRUE)
+```
+
+-   glucose, education, BPMeds, totChol, cigsPerDay, BMI, heartRate variables have missing values.
+
+```{r}
+#removing missing values
+cardio.cleaned <- na.omit(cardio.data)
+miss.count(cardio.cleaned)
+```
+
+```{r}
+md.pattern(cardio.cleaned, rotate.names = TRUE, plot = TRUE)
+```
+
+-   Missing values are removed.
+
+```{r}
+#summary
+summary(cardio.cleaned)
+```
+
+## 2. Explanatory Data Analyzing
+
+### 2.1 Demographic Data
+
+#### 2.1.1 Age
+
+```{r}
+summary(cardio.cleaned$age)
+```
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+cardio.cleaned$TenYearCHD <- as.factor(cardio.cleaned$TenYearCHD)
+```
+
+```{r}
+# Age Distribution of All Patients
+ggplot(cardio.cleaned, aes(x = age)) +
+  geom_histogram(aes(y = ..density..), bins = 30, color = "black", fill = "#00bfc4") +
+  geom_density(color = "red",size=1) +
+  labs(title = "Distribution of Patients in Ages",
+       x = "Age") +
+  theme_bw()
+```
+
+-   Age between 40-45 patients have a higher risk of CHD.
+
+```{r}
+#distribution of age
+ggplot(cardio.cleaned, aes(x = age, fill = TenYearCHD)) +
+  geom_histogram(position = "fill", binwidth = 1) +
+  labs(title = "Proportion of Patients in Ages by CHD Risk",
+       x = "Age",
+       y = "Proportion of Smoking Patients")+
+  xlim(min(cardio.cleaned$age) + 1, max(cardio.cleaned$age) - 1)+
+  theme_bw()
+```
+
+-   The risk of CHD rate shows a gradual increase as age progresses, indicating a positive correlation between age and the risk of CHD.
+
+#### 2.1.2 Education
+
+```{r}
+cardio.cleaned$education <- as.factor(cardio.cleaned$education)
+```
+
+```{r}
+summary(cardio.cleaned$education)
+```
+
+```{r}
+#edu count
+edu.counts <- table(cardio.cleaned$education)
+edu.percentages <- prop.table(edu.counts) * 100
+edu.data <- data.frame(
+  eduLvl = names(edu.counts),
+  count = as.numeric(edu.counts),
+  percentage = edu.percentages
+)
+#pie chart
+ggplot(edu.data, aes(x = "", y = count, fill = eduLvl)) +
+  geom_bar(stat = "identity", color="black", width = 1) +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = paste0(round(percentage.Freq,2), " %")),
+            position = position_stack(vjust = 0.5)) +
+  labs(fill = "Eductation Level", title = "Proportion of Patients in Education Level") +
+  theme_bw() +
+  theme(axis.line = element_blank(),
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        axis.title = element_blank())
+```
+
+```{r}
+cardio.cleaned$TenYearCHD <- as.factor(cardio.cleaned$TenYearCHD)
+```
+
+```{r}
+#barchart
+ggplot(cardio.cleaned, aes(x = education, fill = TenYearCHD)) +
+  geom_bar(position = "fill", color = "black", width = 0.8) +
+  labs(x = "Education Level", y = "Proportion of CHD Risk Patients",
+       title = "Proportion of CHD Risk Patients by Education Level") +
+  theme_bw()
+```
+
+-   The pie chart illustrates that as the education level increases, the number of patients decreases proportionally. Furthermore, the histogram reveals the proportion of individuals at risk of developing CHD based on their education levels. It demonstrates that the lowest education level corresponds to the highest CHD risk rate, approximately 20%, among all education levels. On the other hand, the other education levels exhibit a similar CHD risk rate of around 15%.
+
+-   In conclusion, the analysis suggests that there is no significant positive association between education level and the risk of developing CHD. However, the individuals with the lowest education level may have a higher risk of CHD.
+
+#### 2.1.3 Gender
+
+```{r}
+cardio.cleaned$sex <- as.factor(cardio.cleaned$sex)
+summary(cardio.cleaned$sex)
+```
+
+```{r}
+#sex count
+sex.counts <- table(cardio.cleaned$sex)
+sex.percentages <- prop.table(sex.counts) * 100
+sex.data <- data.frame(
+  sex = names(sex.counts),
+  count = as.numeric(sex.counts),
+  percentage = sex.percentages
+)
+#pie chart
+ggplot(sex.data, aes(x = "", y = count, fill = sex)) +
+  geom_bar(stat = "identity", color="black", width = 1) +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = paste0(round(percentage.Freq,2), " %")),
+            position = position_stack(vjust = 0.5)) +
+  labs(fill = "Gender", title = "Distribution of Patients in Genders") +
+  theme_bw() +
+  theme(axis.line = element_blank(),
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        axis.title = element_blank())
+#ggsave("../outputs/2.1.3.1_pie(prop_gen).png",width = 6, height = 4)
+```
+
+```{r}
+#barchart
+ggplot(cardio.cleaned, aes(x = sex, fill = TenYearCHD)) +
+  geom_bar(position = "fill", color = "black", width = 0.8) +
+  labs(x = "Gender", y = "Proportion of CHD Risk Patients",
+       title = "Proportion of CHD Risk Patients by Genders") +
+  theme_bw()
+```
+
+-   The pie chart indicates that the number of female patients is higher than the number of male patients. However, when we specifically analyze the patients at risk of developing Coronary Heart Disease (CHD) based on their sex, we observe that male patients have a higher risk compared to female patients.
+
+### 2.2 Patient Behavior
+
+#### 2.2.1 Smoking
+
+```{r}
+library(dplyr)
+#Smoking by gender
+df_counts <- cardio.cleaned %>% 
+  group_by(sex,is_smoking ) %>% 
+  summarise(count = n()) %>% 
+  ungroup() %>% 
+  mutate(total = sum(count),
+         percentage = count / total)
+```
+
+```{r}
+cardio.cleaned$is_smoking<- as.factor(cardio.cleaned$is_smoking)
+#Smoking by Gender
+ggplot(df_counts, aes(x = sex, y = count, fill = is_smoking)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Number of Smoking Patients by Gender",
+       x = "Gender",
+       y = "Count") +
+  scale_fill_discrete(name = "is_smoking") +
+  theme_bw()
+```
+
+-   According to the graph, we can observe that the number of male smokers is higher than that of females, suggesting a higher prevalence of smoking among men in this study.
+
+```{r}
+#smoking by age
+ggplot(cardio.cleaned, aes(x = age, fill = is_smoking)) +
+  geom_histogram(position = "fill", binwidth = 1) +
+  labs(title = "Proportion of Smoking Patients by Ages",
+       x = "Age",
+       y = "Proportion of Smoking Patients")+
+  xlim(min(cardio.cleaned$age) + 1, max(cardio.cleaned$age) - 1)+
+  theme_bw()
+```
+
+-   According to this plot, we can see that the proportion of smokers tends to decrease with age.
+
+```{r}
+#barchart
+ggplot(cardio.cleaned, aes(x = is_smoking, fill = TenYearCHD)) +
+  geom_bar(position = "fill", color = "black", width = 0.8) +
+  labs(x = "is_smoking", y = "Proportion of CHD Risk Patients",
+       title = "Proportion of CHD Risk Ptatients by Smoking") +
+  theme_bw()
+```
+
+-   According to the bar chart a weak association between smoking and the risk of Coronary Heart Disease (CHD). The difference in CHD risk between smokers and non-smokers is only about 5%.
+
+-   These findings indicate that smoking is more prevalent among males and tends to decrease with age. However, based on the available data, the relationship between smoking and the risk of CHD is not strongly explained.
+
+#### 2.2.2 Cigarettes Per Day
+
+```{r}
+#cigs perday
+ggplot(cardio.cleaned, aes(x = cigsPerDay)) +
+  geom_histogram(fill="#00c1c3",color="black") +
+  labs(x = "Cigarettes Per Day", y= "Count", title = "Distribution of Daily Cigarettes Consumption") +
+  theme_bw()
+```
+
+-   The histogram illustrates that the majority of patients consume fewer than 5 cigarettes per day.
+
+### 2.3 Medical (History)
+
+#### 2.3.1 Blood Pressure Medication (BPMeds)
+
+```{r}
+cardio.cleaned$BPMeds <- as.factor(cardio.cleaned$BPMeds)
+summary(cardio.cleaned$BPMeds)
+```
+
+-   Sample sizes are imbalanced.
+
+```{r}
+#BPMeds count
+BPM.counts <- table(cardio.cleaned$BPMeds)
+BPM.percentages <- prop.table(BPM.counts) * 100
+BPM.data <- data.frame(
+  BPM = names(BPM.counts),
+  count = as.numeric(BPM.counts),
+  percentage = BPM.percentages
+)
+#pie chart
+ggplot(BPM.data, aes(x = "", y = count, fill = BPM)) +
+  geom_bar(stat = "identity", color="black", width = 1) +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = paste0(round(percentage.Freq,2), " %")),
+            position = position_stack(vjust = 0.5)) +
+  labs(fill = "BPM", title = "Proportion of Patients on BPMeds") +
+  theme_bw() +
+  theme(axis.line = element_blank(),
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        axis.title = element_blank())
+```
+
+```{r}
+#barchart
+ggplot(cardio.cleaned, aes(x = BPMeds, fill = TenYearCHD)) +
+  geom_bar(position = "fill", color = "black", width = 0.8) +
+  labs(x = "BPMeds", y = "Proportion of CHD Risk Patients",
+       title = "Proportion of CHD Risk by BPMeds") +
+  theme_bw()
+ggsave("../outputs/2.3.1.2_hist(bpm_CHD_Risk).png",width = 6, height = 4)
+```
+
+-   According to the pie chart 3% of patients have history of taking medication for blood pressure.
+
+-   The number of patients who are prescribed to blood pressure medication have approximately twice risk of CHD in next 10 years when comparing to patients who are with no previous blood pressure medication history.
+
+#### 2.3.2 Prevalent Stroke
+
+```{r}
+cardio.cleaned$prevalentStroke <- as.factor(cardio.cleaned$prevalentStroke)
+summary(cardio.cleaned$prevalentStroke)
+```
+
+-   Sample sizes are imbalanced.
+
+```{r}
+#prevalentStroke count
+stroke.counts <- table(cardio.cleaned$prevalentStroke)
+stroke.percentages <- prop.table(stroke.counts) * 100
+stroke.data <- data.frame(
+  stroke = names(stroke.counts),
+  count = as.numeric(stroke.counts),
+  percentage = stroke.percentages
+)
+#pie chart
+ggplot(stroke.data, aes(x = "", y = count, fill = stroke)) +
+  geom_bar(stat = "identity", color="black", width = 1) +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = paste0(round(percentage.Freq,2), " %")),
+            position = position_stack(vjust = 0.5)) +
+  labs(fill = "Prevalent Stroke", title = "Proportion of Patients with Prevalent Stroke") +
+  theme_bw() +
+  theme(axis.line = element_blank(),
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        axis.title = element_blank())
+```
+
+```{r}
+#barchart
+ggplot(cardio.cleaned, aes(x = prevalentStroke, fill = TenYearCHD)) +
+  geom_bar(position = "fill", color = "black", width = 0.8) +
+  labs(x = "prevalent Stroke", y = "Proportion of CHD Risk Patients",
+       title = "Proportion of CHD Risk by prevalent Stroke") +
+  theme_bw()
+```
+
+-   The proportion of patients with a prevalent stroke is found to have up to three times the risk of developing CHD compared to those without a prevalent stroke.
+
+#### 2.3.3 Prevalent Hypertension
+
+```{r}
+cardio.cleaned$prevalentHyp <- as.factor(cardio.cleaned$prevalentHyp)
+summary(cardio.cleaned$prevalentHyp)
+```
+
+-   Sample sizes are imbalanced.
+
+```{r}
+#prevalentHyp count
+hyp.counts <- table(cardio.cleaned$prevalentHyp)
+hyp.percentages <- prop.table(hyp.counts) * 100
+hyp.data <- data.frame(
+  hyp = names(hyp.counts),
+  count = as.numeric(hyp.counts),
+  percentage = hyp.percentages
+)
+#pie chart
+ggplot(hyp.data, aes(x = "", y = count, fill = hyp)) +
+  geom_bar(stat = "identity", color="black", width = 1) +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = paste0(round(percentage.Freq,2), " %")),
+            position = position_stack(vjust = 0.5)) +
+  labs(fill = "Prevalent Hypertension", title = "Proportion of Patients with Prevalent Hypertension") +
+  theme_bw() +
+  theme(axis.line = element_blank(),
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        axis.title = element_blank())
+```
+
+```{r}
+#barchart
+ggplot(cardio.cleaned, aes(x = prevalentHyp, fill = TenYearCHD)) +
+  geom_bar(position = "fill", color = "black", width = 0.8) +
+  labs(x = "prevalent Hypertension", y = "Proportion of CHD Risk Patients",
+       title = "Proportion of CHD Risk by prevalent Hypertension") +
+  theme_bw()
+```
+
+-   The pie chart illustrates that approximately one-third of the patients in the dataset have prevalent hypertension. Additionally, the histogram analysis indicates that patients with prevalent hypertension have roughly twice the likelihood of developing coronary heart disease (CHD) compared to those without hypertension.
+
+#### 2.3.4 Diabetes
+
+```{r}
+cardio.cleaned$diabetes <- as.factor(cardio.cleaned$diabetes)
+summary(cardio.cleaned$diabetes)
+```
+
+-   Sample sizes are imbalanced.
+
+```{r}
+#diabetes count
+diabetes.counts <- table(cardio.cleaned$diabetes)
+diabetes.percentages <- prop.table(diabetes.counts) * 100
+diabetes.data <- data.frame(
+  diabetes = names(diabetes.counts),
+  count = as.numeric(diabetes.counts),
+  percentage = diabetes.percentages
+)
+#pie chart
+ggplot(diabetes.data, aes(x = "", y = count, fill = diabetes)) +
+  geom_bar(stat = "identity", color="black", width = 1) +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = paste0(round(percentage.Freq,2), " %")),
+            position = position_stack(vjust = 0.5)) +
+  labs(fill = "Diabetes", title = "Proportion of Patients with Diabetes") +
+  theme_bw() +
+  theme(axis.line = element_blank(),
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        axis.title = element_blank())
+```
+
+```{r}
+#barchart
+ggplot(cardio.cleaned, aes(x = diabetes, fill = TenYearCHD)) +
+  geom_bar(position = "fill", color = "black", width = 0.8) +
+  labs(x = "Diabetes", y = "Proportion of CHD Risk Patients",
+       title = "Proportion of CHD Risk by Diabetes") +
+  theme_bw()
+```
+
+-   The pie chart illustrates that only a small percentage (2.7%) of the patients in the data set have diabetes.
+
+-   The histogram reveals that the patients with diabetes have more than twice the likelihood of developing coronary heart disease (CHD) compared to those without diabetes.
+
+-   **Medical History Summary** The analysis of the patient's medical history reveals that individuals with certain medical conditions, such as diabetes, hypertension, prevalent stroke, and prevalent hypertension, have a higher likelihood of developing coronary heart disease (CHD). However, the number of patients on blood pressure medication, stroke cases, and diabetes is significantly smaller compared to the number of samples for hypertensive patients. These imbalance samples can affect the model performance.
+
+### 2.4 Medical (Current)
+
+#### 2.4.1 Total Cholesterol Level (totChol)
+
+-   Cholesterol Level is divided in to 3 categories.
+
+    | Cholesterol Levels | Total Cholesterol (mg/dL) |
+    |--------------------|---------------------------|
+    | Dangerous          | \>= 240                   |
+    | At risk            | 200 - 239                 |
+    | Healthy            | \< 200                    |
+
+```{r}
+tot.chol <- cardio.cleaned %>%
+  mutate(Chol_Category = case_when(
+    totChol < 200 ~ "Healthy",
+    totChol >= 200 & totChol < 240 ~ "At risk",
+    totChol >= 240 ~ "Dangerous"
+  ))
+```
+
+```{r}
+#total chol dist
+ggplot(tot.chol, aes(x = totChol, fill = Chol_Category)) +
+  geom_histogram(position = "stack", bins = 100, color = "black", alpha = 0.8) +
+  labs(title = "Total Cholesterol Distribution by Cholesterol Level",
+       x = "Total Cholesterol(mg/dl)",
+       y = "Count") +
+  theme_bw()
+```
+
+-   According to the histogram we can clearly see the healthy level, at risk level and dangerous level at high total cholesterol. Highest number of samples are at risk level. This histogram provides a better understanding of the distribution of cholesterol levels among the samples and helps identify the proportion of individuals at different risk levels.
+
+```{r}
+# CHD Rate by Chol Category
+ggplot(tot.chol, aes(x = Chol_Category, y = TenYearCHD, fill = Chol_Category)) +
+  geom_bar(stat = "identity") +
+  labs(title = "CHD Rate by Cholesterol Category",
+       x = "",
+       y = "CHD Rate") +
+  theme_bw()
+```
+
+-   This bar graph illustrates that the increasing trend of CHD rate as cholesterol level increases. Patients who are
+
+```{r}
+str(cardio.cleaned)
+```
+
+#### 2.4.2 Blood Pressure Level (systolic blood pressure (sysBP), diastolic blood pressure (diaBP)
+
+-   systolic blood pressure and diastolic blood pressure categorize in to 3 categories.
+
+| Category     | Systolic (mm-Hg) | Diastolic (mm-Hg) |
+|--------------|------------------|-------------------|
+| Normal       | \<120            | \<80              |
+| Elevated     | 120-129          | \<80              |
+| Hypertension | \>=130           | \>=80             |
+
+```{r}
+bp <- cardio.cleaned %>%
+  mutate(BP_Category = case_when(
+    sysBP < 120 & diaBP < 80 ~ "Normal",
+    sysBP >= 120 & sysBP < 130 & diaBP < 80 ~ "Elevated",
+    sysBP >= 130 | diaBP >= 80 ~ "Hypertension"
+  ))
+```
+
+```{r}
+ggplot(data = bp, aes(x = sysBP, y = diaBP, color = BP_Category)) +
+  geom_point() +
+  labs(title = "Scatter Plot of Blood Pressure Levels",
+       x = "Systolic BP",
+       y = "Diastolic BP") +
+  theme_bw() 
+```
+
+-   According to the scatter plot, a significant proportion of individuals in this data set have a risk of hypertension, as indicated by the higher values of systolic and diastolic blood pressure. This suggests that hypertension is prevalent among the participants.
+
+#### 2.4.3 BMI
+
+-   BMI values are divided in to 4 categories.
+
+| Weight Status | BMI         |
+|---------------|-------------|
+| Underweight   | \<18.5      |
+| Healthy       | 18.5 - 24.9 |
+| Overweight    | 25.0 - 29.9 |
+| Obesity       | \>=30.0     |
+
+```{r}
+bmi <- cardio.cleaned %>%
+  mutate(BMI_Category = case_when(
+    BMI < 18.5 ~ "Underweight",
+    BMI >= 18.5 & BMI < 25 ~ "Healthy",
+    BMI >= 25 & BMI < 30 ~ "Overweight",
+    BMI >= 30 ~ "Obesity",
+  ))
+```
+
+```{r}
+# bmi dist
+ggplot(data = bmi, aes(x = BMI, fill = BMI_Category)) +
+  geom_histogram(position = "stack", color = "black", bins = 100) +
+  labs(title = "Distribution of BMI by Weight Status",
+       x = "BMI Index",
+       y = "Count") +
+  theme_minimal()
+```
+
+-   According to the histogram ,majority of patients in this data set are categorized as healthy. However, a notable proportion of individuals are classified as overweight.
+
+#### 2.4.4 Heart Rate
+
+```{r}
+#heart rate dist
+ggplot(cardio.cleaned, aes(x = heartRate)) +
+  geom_histogram(aes(y = ..density..), bins = 50, color = "black", fill = "#00bfc4") +
+  geom_density(color = "red",size=1) +
+  labs(title = "Heart Rate Distribution of Patients",
+       x = "Heart Rate") +
+  theme_bw()
+```
+
+-   The histogram shows the population density of patients' heart rates, with the highest density occurring around 78 bpm. This indicates that a significant number of patients have heart rates within the normal range of 60-100 bpm.
+
+#### 2.4.5 Glucose Level
+
+-   Glucose level is divided in to 4 categories.
+
+| Status       | Glucose Level (mg/dL) |
+|--------------|-----------------------|
+| Hypoglycemia | \<70                  |
+| Normal       | 70-99                 |
+| At risk      | 100-125               |
+| Diabetes     | ≥126                  |
+
+```{r}
+cardio.cleaned$Glucose_Category <- cut(cardio.cleaned$glucose, 
+                               breaks = c(0, 70, 100, 126, Inf),
+                               labels = c("Hypoglycemia", "Normal", "At risk", "Diabetes"),right = FALSE)
+Glucose_Counts <- table(cardio.cleaned$Glucose_Category)
+Glucose_Data <- data.frame(Glucose_Category = names(Glucose_Counts),
+                           Count = as.numeric(Glucose_Counts))
+```
+
+```{r}
+# Glucose Distribution by Category
+ggplot(data = Glucose_Data, aes(x = Glucose_Category, y = Count, fill = Glucose_Category)) +
+  geom_bar(stat = "identity", color = "black") +
+  labs(title = "Glucose Distribution by Category",
+       x = "Glucose Category",
+       y = "Count") +
+  theme_minimal()
+```
+
+-   Most number of patients are normal. Only least number of diabetes patients in the data set.
+
+### 2.5 Correlation Matrix
+
+```{r}
+#numerical variables
+numeric_vars <- select_if(cardio.cleaned, is.numeric)
+
+# Compute the correlation matrix
+cor_matrix <- cor(numeric_vars)
+cor_matrix
+```
+
+```{r}
+cor_data <- reshape2::melt(cor_matrix)
+cor_data
+```
+
+```{r}
+# correlation heatmap
+ggplot(cor_data, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile(color = "white") +
+  geom_text(aes(Var2, Var1, label = round(value,2)), color = "black", size = 4) +
+  scale_fill_gradient2(low = "#00c1c3", high = "#ff716f", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+   name="Pearson\nCorrelation")+
+  labs(x = NULL, y = NULL, title = "Correlation Matrix") +
+  theme_bw()
+```
+
+-   According to the correlation matrix highest positive correlation exists between 'diaBP' and 'sysBP'.
+
+-   Lower positive correlation exists between 'BMI' and 'diaBP' and 'BMI' and 'sysBP'.
+
+-   Between 'age' and 'cigsPerDay' has a lower negative correlation.
+
+## 3. Data Preprocessing
+
+```{r}
+str(cardio.cleaned)
+```
+
+```{r}
+#remove 'id' ,columns
+cardio.df <- subset(cardio.cleaned, select = -c(id))
+```
+
+```{r}
+str(cardio.df)
+```
+
+```{r}
+#var to encoded
+var.2.encode <- subset(cardio.df, select = c(education, sex, is_smoking,
+                                             BPMeds, prevalentStroke, prevalentHyp,
+                                             diabetes, Glucose_Category))
+```
+
+```{r}
+#one-hot encoding
+encoded.variables <- model.matrix(~ . - 1, data = var.2.encode)
+head(encoded.variables)
+```
+
+```{r}
+#combining df
+cardio.df1 <- cbind(cardio.df$age, cardio.df$cigsPerDay, cardio.df$totChol, cardio.df$sysBP, cardio.df$diaBP, cardio.df$BMI, cardio.df$heartRate, cardio.df$glucose, cardio.cleaned$TenYearCHD)
+colnames(cardio.df1) <- c('age','cigsPerDay', 'totChol', 'sysBP', 'diaBP', 'BMI',
+                          'heartRate', 'glucose', 'TenYearCHD')
+encoded.df <- cbind(encoded.variables,cardio.df1)
+```
+
+```{r}
+encoded.df <- as.data.frame(encoded.df)
+```
+
+```{r}
+encoded.df$TenYearCHD <- ifelse(encoded.df$TenYearCHD == 1, 0, 1)
+```
+
+```{r}
+head(encoded.df)
+```
+
+```{r}
+dim(encoded.df)
+```
+
+```{r}
+# train-test split (80%-20% ratio)
+library(caret)
+train.indices <- createDataPartition(encoded.df$TenYearCHD, p = 0.8, list = FALSE)
+
+```
+
+```{r}
+train.data <- encoded.df[train.indices, ]
+test.data <- encoded.df[-train.indices, ]
+```
+
+```{r}
+dim(train.data)
+```
+
+```{r}
+dim(test.data)
+```
+
+## 4. Model Building
+
+```{r}
+library(e1071)
+# model with all the variables
+nb.model <- naiveBayes(TenYearCHD ~ ., data = train.data, usekernel = TRUE)
+```
+
+```{r}
+print(nb.model)
+```
+
+## 5. Model Evolution
+
+```{r}
+#predictions
+predictions <- predict(nb.model, newdata = test.data)
+```
+
+```{r}
+#confusion matrix
+confusion.matrix <- table(predictions, test.data$TenYearCHD)
+print(confusion.matrix)
+```
+
+```{r}
+# Calculate accuracy, precision, recall and f1-score
+accuracy <- sum(diag(confusion.matrix)) / sum(confusion.matrix)
+precision <- confusion.matrix["0", "0"] / sum(confusion.matrix["0", ])
+recall <- confusion.matrix["0", "0"] / sum(confusion.matrix[, "0"])
+f1.score <-  2 * (precision * recall) / (precision + recall)
+```
+
+```{r}
+cat("Accuracy  :", accuracy, "\n")
+cat("Precision :", precision, "\n")
+cat("Recall    :", recall, "\n")
+cat("F1 Score  :", f1.score, "\n")
+```
+
+```{r}
+cat("Model Accuracy:", sprintf("%.2f%%", accuracy * 100), "\n")
+```
