@@ -57,7 +57,7 @@ Link: https://www.kaggle.com/datasets/mamta1999/cardiovascular-risk-data
 
 This project is conducted using R programming language.
 
-<u> *Libraries Used* </u>
+<ins> *Libraries Used* </ins>
 - readr – import data
 - mice – handle missing values
 - ggplot2 – data visualization (EDA)
@@ -68,7 +68,7 @@ This project is conducted using R programming language.
 
 ### Results of the Model
 
-<u> Model Summary </u>
+<ins> Model Summary </ins>
 |**Metric**|**Value**|
 |:---|---:|
 |Accuracy|0.8564|
