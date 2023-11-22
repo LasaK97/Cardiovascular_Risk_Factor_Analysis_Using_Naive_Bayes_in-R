@@ -37,6 +37,8 @@ Link: https://www.kaggle.com/datasets/mamta1999/cardiovascular-risk-data
 - TenYearCHD: 10-year risk of CHD of a patient ( 1: “Yes”, 0 : “No”)
 
 ### 2.2 Key Steps
+
+<div align="justify">
 - Step 1. Data Importing & Handling Missing Values
           In this step the data set is imported and missing values are handled by removing them from the data set.
 
@@ -57,6 +59,7 @@ Link: https://www.kaggle.com/datasets/mamta1999/cardiovascular-risk-data
 
 - Step 7. Conclusion & Interpretation
           Final conclusions and interpretations are made.
+</div>
 
 ### 2.3 Tools & Libraries
 
@@ -86,6 +89,8 @@ This project is conducted using R programming language.
 |0|483|62|
 |1|22|28|
 
+<div align="justify">
+
 - The accuracy of 0.8564 indicates that the model correctly predicted cardiovascular risk factors for approximately 85.64% of   the instances in the dataset, suggesting effective classification for both positive and negative instances.
 
 - The precision of 0.8862, the model correctly classified 88.62% of instances predicted as having cardiovascular risk factors, highlighting its tendency to accurately identify the presence of such factors and minimize false positives.
@@ -94,8 +99,14 @@ This project is conducted using R programming language.
 
 - The F1-Score of 0.9200, the model achieves a strong balance between precision and recall, as it is the harmonic mean of these metrics. This balanced measure comprehensively considers both false positives and false negatives in assessing the model's performance.
 
+</div>
+
 ## 4. Conclusion and Recommendation
+
+<div align="justify">
 
 The achieved accuracy of 85.64% indicates that the naïve bayes model performed well in predicting cardiovascular risk factors. This level of accuracy suggests that the model can be a valuable tool for identifying individuals at risk and aiding in early intervention and prevention strategies.
 Accurate prediction of cardiovascular risk factors can have a significant impact on public health. By identifying high-risk individuals, public health initiatives can be targeted towards those who would benefit the most, thereby reducing the burden of cardiovascular disease on the population. The model can be further enhanced by removing correlated features and check whether the model performance increases. And also, since this is a binary classification other classification technique such as logistic regression, linear discriminant analysis, etc. may perform well than this naïve bayes model.
 In this CHD classification, high precision (0.886) would mean minimizing the chances of incorrectly identifying individuals as having the disease when they do not. This is important if the consequences of unnecessary treatments or interventions are significant and high recall (0.956) would mean ensuring that the model captures the majority of individuals with the disease, minimizing the chances of missing positive cases. This is important when early detection and intervention are crucial for effective management. And by considering both precision and recall the f1-score(0.92) indicates a good balance between minimizing false positives and false negatives in CHD classification. By considering all of these factors, I can recommend this naïve bayes model as a good accurate model for classifying the patients.
+
+</div>
